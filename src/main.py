@@ -26,9 +26,9 @@ webApiBindPort = config.get("settings", {}).get("webApiBindPort", 8000)
 mitmProxyBindPort = config.get("settings", {}).get("mitmProxyBindPort", 8080)
 
 try:
-    public_port = sys.argv[1]
+    public_port = int(sys.argv[1])
 except Exception as e:
-    public_port = None
+    logger.error(e)
 app = FastAPI()
 
 # 使用共享内存来存储端口信息
