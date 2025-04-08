@@ -1,0 +1,3 @@
+[settings]
+mitmProxyBindPort = 8080
+webApiBindPort = 8000
