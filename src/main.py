@@ -111,10 +111,10 @@ def stop_mitmproxy(process: Process):
 async def port_change(new_port: int):
     global port_value
     port_value.value = new_port
+    logger.info(f"端口切换至 {new_port}")
 
 
 def handle_exit(signum, frame):
-    print("收到退出信号")
     sys.exit(0)
 
 
