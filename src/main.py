@@ -1,20 +1,28 @@
 import asyncio
+import os
 import sys
 import tomllib
 from multiprocessing import Process, Value
+from urllib.parse import urlparse, parse_qs
 
 import uvicorn
 from fastapi import FastAPI
+from loguru import logger
 from mitmproxy.http import HTTPFlow
 from mitmproxy.options import Options
 from mitmproxy.tools.dump import DumpMaster
-from urllib.parse import urlparse, parse_qs
-from loguru import logger
 
-with open("config.toml", "rb") as file:
-    config = tomllib.load(file)
-webApiBindPort = config["settings"]["webApiBindPort"]
-mitmProxyBindPort = config["settings"]["mitmProxyBindPort"]
+CONFIG_PATH = os.path.abspath(os.path.dirname(__file__)) + os.sep + "config.toml"
+
+try:
+    with open(CONFIG_PATH, "rb") as f:
+        config = tomllib.load(f)
+# 配置不存在就使用默认配置
+except FileNotFoundError:
+    config = {}
+
+webApiBindPort = config.get("settings", {}).get("webApiBindPort", 8000)
+mitmProxyBindPort = config.get("settings", {}).get("mitmProxyBindPort", 8080)
 
 try:
     public_port = sys.argv[1]

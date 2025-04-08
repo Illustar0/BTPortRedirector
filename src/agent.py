@@ -1,16 +1,24 @@
+import os
 import socket
 import subprocess
 import sys
-import urllib.request
-import urllib.parse
 import tomllib
+import urllib.parse
+import urllib.request
 
 python_executable = sys.executable
 protocol, private_ip, private_port, public_ip, public_port = sys.argv[1:6]
 
-with open("config.toml", "rb") as file:
-    config = tomllib.load(file)
-webApiBindPort = config["settings"]["webApiBindPort"]
+CONFIG_PATH = os.path.abspath(os.path.dirname(__file__)) + os.sep + "config.toml"
+
+try:
+    with open(CONFIG_PATH, "rb") as f:
+        config = tomllib.load(f)
+# 配置不存在就使用默认配置
+except FileNotFoundError:
+    config = {}
+
+webApiBindPort = config.get("settings", {}).get("webApiBindPort", 8000)
 
 
 def is_running(port: int):
