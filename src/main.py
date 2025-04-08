@@ -1,5 +1,6 @@
 import asyncio
 import os
+import signal
 import sys
 import tomllib
 from multiprocessing import Process, Value
@@ -61,10 +62,6 @@ class Addon:
                 flow.request.url = lo
                 flow.request.host_header = host_header
 
-    def response(self, flow: HTTPFlow) -> None:
-        # 修改响应
-        logger.debug(flow.response.content)
-
 
 async def config_mitmproxy(listen_host="127.0.0.1", listen_port=8080, port_value=None):
     """配置 mitmproxy 参数与启动"""
@@ -98,6 +95,7 @@ def start_mitmproxy(listen_host: str, listen_port: int, port_value) -> Process:
     mitmproxy_process = Process(
         target=run_mitmproxy, args=(listen_host, listen_port, port_value)
     )
+    mitmproxy_process.daemon = True
     mitmproxy_process.start()
     return mitmproxy_process
 
@@ -114,6 +112,14 @@ async def port_change(new_port: int):
     global port_value
     port_value.value = new_port
 
+
+def handle_exit(signum, frame):
+    print("收到退出信号")
+    sys.exit(0)
+
+
+signal.signal(signal.SIGTERM, handle_exit)
+signal.signal(signal.SIGINT, handle_exit)
 
 if __name__ == "__main__":
     mitmproxy_process = start_mitmproxy("127.0.0.1", mitmProxyBindPort, port_value)
