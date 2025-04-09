@@ -119,7 +119,7 @@ async def port_change(new_port: int) -> Dict[str, Any]:
 
     global port_value
     port_value.value = new_port
-    logger.info(f"端口切换至 {new_port}")
+    logger.info(f"Port switched to {new_port}")
     return {"status": "success", "message": f"Port switched to {new_port}"}
 
 
