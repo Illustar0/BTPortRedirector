@@ -4,10 +4,11 @@ import signal
 import sys
 import tomllib
 from multiprocessing import Process, Value
+from typing import Dict, Any
 from urllib.parse import urlparse, parse_qs
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from loguru import logger
 from mitmproxy.http import HTTPFlow
 from mitmproxy.options import Options
@@ -108,10 +109,19 @@ def stop_mitmproxy(process: Process):
 
 
 @app.get("/portChanged")
-async def port_change(new_port: int):
+async def port_change(new_port: int) -> Dict[str, Any]:
+    """更改重定向的目标端口"""
+    if not 1 <= new_port <= 65535:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid port: {new_port}, the port must be between 1-65535",
+        )
+
     global port_value
     port_value.value = new_port
     logger.info(f"端口切换至 {new_port}")
+    return {"status": "success", "message": f"Port switched to {new_port}"}
+
 
 @app.get("/status")
 async def get_status() -> Dict[str, Any]:
@@ -119,18 +129,28 @@ async def get_status() -> Dict[str, Any]:
     return {
         "currentPort": port_value.value,
         "mitmproxyPort": mitmProxyBindPort,
-        "apiPort": webApiBindPort
+        "apiPort": webApiBindPort,
     }
 
-def handle_exit(signum, frame):
+
+def handle_exit(signum, frame) -> None:
+    """处理退出信号"""
+    logger.info(f"Received signal {signum}, ready to exit.")
     sys.exit(0)
 
 
+# 注册信号处理器
 signal.signal(signal.SIGTERM, handle_exit)
 signal.signal(signal.SIGINT, handle_exit)
 
 if __name__ == "__main__":
-    mitmproxy_process = start_mitmproxy("127.0.0.1", mitmProxyBindPort, port_value)
-    logger.info("MitmProxy is running")
-    logger.info(f"WebAPI is listening in 127.0.0.1:{webApiBindPort}")
-    uvicorn.run(app, host="127.0.0.1", port=webApiBindPort, log_config=None)
+    try:
+        mitmproxy_process = start_mitmproxy("127.0.0.1", mitmProxyBindPort, port_value)
+        logger.info("MitmProxy is running")
+        logger.info(f"WebAPI is listening in 127.0.0.1:{webApiBindPort}")
+        uvicorn.run(app, host="127.0.0.1", port=webApiBindPort, log_config=None)
+    except Exception as e:
+        logger.error(f"Program startup failed: {e}")
+    finally:
+        if "mitmproxy_process" in locals():
+            stop_mitmproxy(mitmproxy_process)
