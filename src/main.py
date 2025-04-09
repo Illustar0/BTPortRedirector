@@ -113,6 +113,14 @@ async def port_change(new_port: int):
     port_value.value = new_port
     logger.info(f"端口切换至 {new_port}")
 
+@app.get("/status")
+async def get_status() -> Dict[str, Any]:
+    """获取当前状态"""
+    return {
+        "currentPort": port_value.value,
+        "mitmproxyPort": mitmProxyBindPort,
+        "apiPort": webApiBindPort
+    }
 
 def handle_exit(signum, frame):
     sys.exit(0)
