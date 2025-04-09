@@ -16,20 +16,21 @@ from mitmproxy.tools.dump import DumpMaster
 
 CONFIG_PATH = os.path.abspath(os.path.dirname(__file__)) + os.sep + "config.toml"
 
-try:
-    with open(CONFIG_PATH, "rb") as f:
-        config = tomllib.load(f)
-# 配置不存在就使用默认配置
-except FileNotFoundError:
-    config = {}
 
+# 加载配置
+def load_config():
+    try:
+        with open(CONFIG_PATH, "rb") as f:
+            return tomllib.load(f)
+    # 配置不存在就使用默认配置
+    except FileNotFoundError:
+        return {}
+
+
+config = load_config()
 webApiBindPort = config.get("settings", {}).get("webApiBindPort", 8000)
 mitmProxyBindPort = config.get("settings", {}).get("mitmProxyBindPort", 8080)
 
-try:
-    public_port = int(sys.argv[1])
-except Exception as e:
-    logger.error(e)
 app = FastAPI()
 
 # 使用共享内存来存储端口信息
@@ -143,7 +144,20 @@ def handle_exit(signum, frame) -> None:
 signal.signal(signal.SIGTERM, handle_exit)
 signal.signal(signal.SIGINT, handle_exit)
 
+
+def init_port_value():
+    try:
+        port_value.value = int(sys.argv[1])
+    except IndexError:
+        logger.warning("No port parameter provided.")
+    except ValueError as e:
+        logger.error(f"Invalid port: {e}")
+
+
 if __name__ == "__main__":
+    # 初始化端口值
+    init_port_value()
+
     try:
         mitmproxy_process = start_mitmproxy("127.0.0.1", mitmProxyBindPort, port_value)
         logger.info("MitmProxy is running")
