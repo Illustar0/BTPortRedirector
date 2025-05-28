@@ -16,7 +16,7 @@ QBITTORRENT_USERNAME = "admin"
 QBITTORRENT_PASSWORD = "admin"
 QBITTORRENT_API_ENDPOINT = "http://127.0.0.1:8080"
 BYPASS_AUTH = False
-RESTART_COMMAND = "systemctl restart qbittorrent-nox"
+QBITTORRENT_START_COMMAND = "systemctl start qbittorrent-nox"
 
 CONFIG_PATH = os.path.abspath(os.path.dirname(__file__)) + os.sep + "config.toml"
 
@@ -100,11 +100,25 @@ if QBITTORRENT_51:
     # Read and discard the response body
     set_response.read()
 
+    conn.request(
+        "POST",
+        f"{base_path}/api/v2/app/shutdown",
+        headers=headers,
+    )
+    shutdown_response = conn.getresponse()
+    if set_response.status != 200:
+        raise Exception(
+            f"Failed to shut down qbittorrent: {shutdown_response.status} {shutdown_response.reason}"
+        )
+
+    # Read and discard the response body
+    shutdown_response.read()
+
     # Close connection
     conn.close()
 
     # Restart qBittorrent
-    subprocess.Popen(RESTART_COMMAND, shell=True)
+    subprocess.Popen(QBITTORRENT_START_COMMAND, shell=True)
 else:
     try:
         with open(CONFIG_PATH, "rb") as f:
