@@ -1,3 +1,4 @@
-[settings]
-mitmProxyBindPort = 8080
-webApiBindPort = 8000
+[Qbittorrent]
+api_endpoint="http://127.0.0.1:8080"
+username="admin"
+password="adminadmin"
