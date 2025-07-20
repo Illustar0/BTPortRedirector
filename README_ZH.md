@@ -23,7 +23,7 @@
 
 1. 克隆仓库：
 ```bash
-git clone <repository-url>
+git clone https://github.com/Illustar0/BTPortRedirector
 cd BTPortRedirector
 ```
 

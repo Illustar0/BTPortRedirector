@@ -23,7 +23,7 @@ A Python tool that dynamically updates qBittorrent's announce IP and port in rea
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/Illustar0/BTPortRedirector
 cd BTPortRedirector
 ```
 
